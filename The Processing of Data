@@ -29,7 +29,7 @@ teacherfile=teacherfile.set_index("Sr. No.",drop=False)
 
 
 reqfile=teacherfile.loc[1.0:116.0,["Name of the faculty","Total duties","Favorable Dates"]]
-print(reqfile)
+#print(reqfile)
 
 ##############          Getting the Exam Dates
 
@@ -37,7 +37,7 @@ date=file.loc[:,['Day/Date','Year','Time','Total Jr. Sup. Req.']]
 weekdays=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 for i in range(len(weekdays)):
     weekdays[i]=weekdays[i].title()    
-print(weekdays)
+#print(weekdays)
 datesofexam=[]
 dateswithshift=[]
 examdate=[]
@@ -114,7 +114,7 @@ for u in range(1,len(reqfile['Name of the faculty'])+1,1):
 #=================================    Let's assign the dates
 
 
-mylist=list(dict.fromkeys(datesofexam))
+    mylist=list(dict.fromkeys(datesofexam))
 datesofexam=mylist
 
 
@@ -168,7 +168,7 @@ def check(mylist,date,name,dutyreq):
             pos=teacherlist.index(name)
             dutyalloted=len(forteacher[pos][1])
             
-        print("/nline 163: count=",count,"index = ",index)
+#        print("/nline 163: count=",count,"index = ",index)
         
         if count < dayduty[index][1] and count>=0 :
             if dutyalloted<dutyreq:
@@ -247,7 +247,7 @@ def allote(teacher):
                 check(dateswithshift, getdate,name,dutiesreq)
         
 
-            
+#===================== The allocation of teachers starts from here
 import random
 allotedteacher=[]
 i=0
@@ -260,6 +260,7 @@ allotedteacher.append(choiceteach)
 
 """
 ak=0
+lengthlt=[]
 for shady in range(len(dateswithshift)):
     ak=ak+dayduty[shady][1]
         
@@ -293,13 +294,109 @@ while terminate < ak:
         allotedteacher.append(choiceteach)
         i=i+1
 
+#================================Getting equal duties for teachers
+   
+minimum=0
+def extraallote():
+    lengthlt.clear()
+
+#   print("line 302 :  I am in while loop")
+    for i in range(len(teacherlist)):
+            length=len(forteacher[i][1])
+            lengthlt.append(length)
+
+    highest=max(lengthlt)
+    minimum=min(lengthlt)
+#    print("minimum = ",minimum)
+    if highest in lengthlt:
+        position=lengthlt.index(highest)
+        date=forteacher[position][1][highest-1]
+#        print("for maximum : position = ", position,
+#             "highest - 1 = " ,highest-1,"and date = ",date)
+        forteacher[position][1].remove(date)
+        position=lengthlt.index(minimum)
+        forteacher[position][1].append(date)
+        return minimum
+
+     
 
 
+#print("line 302 :  I am in while loop")
+x=0
+while x == 0:
+    x = extraallote()
+        
+
+"""Teachers greater than 6 duties """
+
+rearr=[]
+underalloted={}
+for i in range(len(teacherlist)):
+    if len(forteacher[i][1]) == fav[i][2]:
+        if fav[i][2] >6:
+            rearr.append((fav[i][0],fav[i][1],fav[i][2]))
+    elif (len(forteacher[i][1]) < fav[i][2]) and (fav[i][2] < 6):
+        if len(forteacher[i][1]) <6:
+            diff=fav[i][2]-len(forteacher[i][1])
+            underalloted.update({fav[i][0] : [fav[i][1],fav[i][2],diff]})
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+maximum=max(lengthlt)
+count=0
+for i in underalloted:
+    count=count+underalloted[i][2]
+
+
+while count != 0:
+    lengthlt.clear()
+#   print("line 302 :  I am in while loop")
+    for i in range(len(teacherlist)):
+            length=len(forteacher[i][1])
+            lengthlt.append(length)
+    maximum=max(lengthlt)
+    position=lengthlt.index(maximum)
+    date=forteacher[position][1][maximum-1]
+    print('date = ', date)
+    count=count-1
+    
+
+
+
+
+    
+    
+"""    
+    elif len(forteacher[i][1]) < fav[i][2]:
+        if len(forteacher[i][1]) <6:
+            diff=fav[i][2]-len(forteacher[i][1])
+            underalloted.update({fav[i][0] : [fav[i][1],fav[i][2],diff]})
+
+
+"""
+
+
+#================================Counting the no of unalloted teachers
+    
+    
+    
 unallotedthr=[]
 for nik in range(len(teacherlist)):
     if len(forteacher[nik][1])==0:
         unallotedthr.append(forteacher[nik][0])
 
+
+
+
+#===============================Making the file suitable for DataFrame
 for i in range(len(day)):
     while len(day[i][1]) < maxi:
         (day[i][1]).append(" ")
@@ -307,10 +404,12 @@ for i in range(len(day)):
     
 df=pd.DataFrame(dict(day))
 df=df.T
-print(df)
-
-df.to_excel("output.xlsx", sheet_name='Sheet_name_1')
-
+df.columns=[n+1 for n in range(39)]
+df1=pd.DataFrame(forteacher)
+writer = pd.ExcelWriter("output.xlsx", engine='xlsxwriter')
+df.to_excel(writer, sheet_name='Sheet_name_1')
+df1.to_excel(writer, sheet_name='Sheet_name_2')
+writer.save()
 
 
 
